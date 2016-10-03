@@ -1,0 +1,158 @@
+<html>
+<head>
+<title>MainActivity.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: rgb(0,0,0); font-weight: normal; font-style: normal; }
+.s0 { color: rgb(204,120,50); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(128,128,128); }
+.s3 { color: rgb(106,135,89); }
+.s4 { color: rgb(104,151,187); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#C0C0C0" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+MainActivity.java</FONT>
+</center></TD></TR></TABLE>
+<pre>
+
+<span class="s0">package </span><span class="s1">com.example.bluetoothclient</span><span class="s0">;</span><span class="s1"> 
+ 
+ 
+</span><span class="s0">import </span><span class="s1">java.io.IOException</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.io.InputStream</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.io.OutputStreamWriter</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.UUID</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.app.Activity</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.bluetooth.BluetoothAdapter</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.bluetooth.BluetoothDevice</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.bluetooth.BluetoothSocket</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.content.BroadcastReceiver</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.content.Context</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.content.Intent</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.content.IntentFilter</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.os.Bundle</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">android.widget.Toast</span><span class="s0">;</span><span class="s1"> 
+ 
+</span><span class="s0">public class </span><span class="s1">MainActivity </span><span class="s0">extends </span><span class="s1">Activity { 
+ 
+    </span><span class="s0">private boolean </span><span class="s1">CONTINUE_READ_WRITE = </span><span class="s0">true;</span><span class="s1"> 
+ 
+    @Override 
+    </span><span class="s2">/* &quot;If you save the state of the application in a bundle (typically non-persistent, 
+    dynamic data in onSaveInstanceState), it can be passed back to onCreate if the activity 
+    needs to be recreated (e.g., orientation change) so that you don't lose this prior information. 
+     If no data was supplied, savedInstanceState is null.&quot; 
+     */</span><span class="s1"> 
+    </span><span class="s0">protected void </span><span class="s1">onCreate(Bundle savedInstanceState) { 
+        </span><span class="s0">super</span><span class="s1">.onCreate(savedInstanceState)</span><span class="s0">;</span><span class="s1"> 
+        setContentView(R.layout.activity_main)</span><span class="s0">;</span><span class="s1"> 
+        registerReceiver(discoveryResult</span><span class="s0">, new </span><span class="s1">IntentFilter(BluetoothDevice.ACTION_FOUND))</span><span class="s0">;</span><span class="s1"> 
+ 
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter()</span><span class="s0">;</span><span class="s1"> 
+        </span><span class="s0">if</span><span class="s1">(adapter != </span><span class="s0">null </span><span class="s1">&amp;&amp; adapter.isDiscovering()){ 
+            adapter.cancelDiscovery()</span><span class="s0">;</span><span class="s1"> 
+        } 
+        adapter.startDiscovery()</span><span class="s0">;</span><span class="s1"> 
+ 
+    } 
+ 
+    @Override 
+    </span><span class="s0">protected void </span><span class="s1">onDestroy() { 
+        </span><span class="s0">super</span><span class="s1">.onDestroy()</span><span class="s0">;</span><span class="s1"> 
+        </span><span class="s0">try</span><span class="s1">{unregisterReceiver(discoveryResult)</span><span class="s0">;</span><span class="s1">}</span><span class="s0">catch</span><span class="s1">(Exception e){e.printStackTrace()</span><span class="s0">;</span><span class="s1">} 
+        </span><span class="s0">if</span><span class="s1">(socket != </span><span class="s0">null</span><span class="s1">){ 
+            </span><span class="s0">try</span><span class="s1">{ 
+                is.close()</span><span class="s0">;</span><span class="s1"> 
+                os.close()</span><span class="s0">;</span><span class="s1"> 
+                socket.close()</span><span class="s0">;</span><span class="s1"> 
+                CONTINUE_READ_WRITE = </span><span class="s0">false;</span><span class="s1"> 
+            }</span><span class="s0">catch</span><span class="s1">(Exception e){} 
+        } 
+    } 
+ 
+    </span><span class="s0">private </span><span class="s1">BluetoothSocket socket</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">OutputStreamWriter os</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">InputStream is</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">BluetoothDevice remoteDevice</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">BroadcastReceiver discoveryResult = </span><span class="s0">new </span><span class="s1">BroadcastReceiver() { 
+ 
+        @Override 
+        </span><span class="s0">public void </span><span class="s1">onReceive(Context context</span><span class="s0">, </span><span class="s1">Intent intent) { 
+            android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;WWWTTTFFF&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            unregisterReceiver(</span><span class="s0">this</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            remoteDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)</span><span class="s0">;</span><span class="s1"> 
+            </span><span class="s0">new </span><span class="s1">Thread(reader).start()</span><span class="s0">;</span><span class="s1"> 
+        } 
+    }</span><span class="s0">;</span><span class="s1"> 
+ 
+    </span><span class="s0">private </span><span class="s1">Runnable reader = </span><span class="s0">new </span><span class="s1">Runnable() { 
+ 
+        @Override 
+        </span><span class="s0">public void </span><span class="s1">run() { 
+            </span><span class="s0">try </span><span class="s1">{ 
+                android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;Found: &quot; </span><span class="s1">+ remoteDevice.getName())</span><span class="s0">;</span><span class="s1"> 
+                UUID uuid = UUID.fromString(</span><span class="s3">&quot;4e5d48e0-75df-11e3-981f-0800200c9a66&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                socket = remoteDevice.createRfcommSocketToServiceRecord(uuid)</span><span class="s0">;</span><span class="s1"> 
+                socket.connect()</span><span class="s0">;</span><span class="s1"> 
+                android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;Connected...&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                os = </span><span class="s0">new </span><span class="s1">OutputStreamWriter(socket.getOutputStream())</span><span class="s0">;</span><span class="s1"> 
+                is = socket.getInputStream()</span><span class="s0">;</span><span class="s1"> 
+                android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;WWWTTTFFF34243&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s0">new </span><span class="s1">Thread(writter).start()</span><span class="s0">;</span><span class="s1"> 
+                android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;WWWTTTFFF3wwgftggggwww4243: &quot; </span><span class="s1">+ CONTINUE_READ_WRITE)</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s0">int </span><span class="s1">bufferSize = </span><span class="s4">1024</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s0">int </span><span class="s1">bytesRead = -</span><span class="s4">1</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s0">byte</span><span class="s1">[] buffer = </span><span class="s0">new byte</span><span class="s1">[bufferSize]</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s2">//Keep reading the messages while connection is open...</span><span class="s1"> 
+                </span><span class="s0">while</span><span class="s1">(CONTINUE_READ_WRITE){ 
+                    android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;WWWTTTFFF3wwwww4243&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                    </span><span class="s0">final </span><span class="s1">StringBuilder sb = </span><span class="s0">new </span><span class="s1">StringBuilder()</span><span class="s0">;</span><span class="s1"> 
+                    bytesRead = is.read(buffer)</span><span class="s0">;</span><span class="s1"> 
+                    </span><span class="s0">if </span><span class="s1">(bytesRead != -</span><span class="s4">1</span><span class="s1">) { 
+                        String result = </span><span class="s3">&quot;&quot;</span><span class="s0">;</span><span class="s1"> 
+                        </span><span class="s0">while </span><span class="s1">((bytesRead == bufferSize) &amp;&amp; (buffer[bufferSize-</span><span class="s4">1</span><span class="s1">] != </span><span class="s4">0</span><span class="s1">)){ 
+                            result = result + </span><span class="s0">new </span><span class="s1">String(buffer</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s1">bytesRead - </span><span class="s4">1</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                            bytesRead = is.read(buffer)</span><span class="s0">;</span><span class="s1"> 
+                        } 
+                        result = result + </span><span class="s0">new </span><span class="s1">String(buffer</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s1">bytesRead - </span><span class="s4">1</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                        sb.append(result)</span><span class="s0">;</span><span class="s1"> 
+                    } 
+ 
+                    android.util.Log.e(</span><span class="s3">&quot;TrackingFlow&quot;</span><span class="s0">, </span><span class="s3">&quot;Read: &quot; </span><span class="s1">+ sb.toString())</span><span class="s0">;</span><span class="s1"> 
+ 
+                    </span><span class="s2">//Show message on UIThread</span><span class="s1"> 
+                    runOnUiThread(</span><span class="s0">new </span><span class="s1">Runnable() { 
+                        @Override 
+                        </span><span class="s0">public void </span><span class="s1">run() { 
+                            Toast.makeText(MainActivity.</span><span class="s0">this, </span><span class="s1">sb.toString()</span><span class="s0">, </span><span class="s1">Toast.LENGTH_LONG).show()</span><span class="s0">;</span><span class="s1"> 
+                        } 
+                    })</span><span class="s0">;</span><span class="s1"> 
+                } 
+            } </span><span class="s0">catch </span><span class="s1">(IOException e) {e.printStackTrace()</span><span class="s0">;</span><span class="s1">} 
+        } 
+    }</span><span class="s0">;</span><span class="s1"> 
+ 
+    </span><span class="s0">private </span><span class="s1">Runnable writter = </span><span class="s0">new </span><span class="s1">Runnable() { 
+ 
+        @Override 
+        </span><span class="s0">public void </span><span class="s1">run() { 
+            </span><span class="s0">int </span><span class="s1">index = </span><span class="s4">0</span><span class="s0">;</span><span class="s1"> 
+            </span><span class="s0">while </span><span class="s1">(CONTINUE_READ_WRITE) { 
+                </span><span class="s0">try </span><span class="s1">{ 
+                    os.write(</span><span class="s3">&quot;Message From Client&quot; </span><span class="s1">+ (index++) + </span><span class="s3">&quot;</span><span class="s0">\n</span><span class="s3">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                    os.flush()</span><span class="s0">;</span><span class="s1"> 
+                    Thread.sleep(</span><span class="s4">2000</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                } </span><span class="s0">catch </span><span class="s1">(Exception e) { 
+                    e.printStackTrace()</span><span class="s0">;</span><span class="s1"> 
+                } 
+            } 
+        } 
+    }</span><span class="s0">;</span><span class="s1"> 
+} 
+</span></pre>
+</body>
+</html>
